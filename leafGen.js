@@ -1,7 +1,7 @@
 var LeafGen = function(leafWidth, leafHeight, options, raph){
 
 	this.branches = [];
-
+	this.raph = raph
 	//Dimensions of the raphel.js drawing area.
 	this.width = leafWidth;
 	this.height = leafHeight;
@@ -9,13 +9,11 @@ var LeafGen = function(leafWidth, leafHeight, options, raph){
 	this.options = options;
 
 	//minLength describes how much of a branch is discarded from recursive branch growing.
-	this.minLengthInPixels = function(currentBranch){return this.options.minLength * currentBranch.getTotalLength();}
+	this.minLengthInPixels = function(currentBranchLength){return this.options.minLength * currentBranchLength;}
 	//This is an alternative way to limiting complexity from "steps deep".
 	//I've seen what that does, but this is what came to me intuitively,
 	//So I'm doing the intuition the justice of experimentation.
 	//Besides, if you just set levelsDeep lower than this would limit, it will be the decider by default.
-
-
 
 	//adding base:
 	var base = raph.path("M "+this.width/2+" "+this.height+" l 0 -"+this.height*0.9);
@@ -36,37 +34,56 @@ var LeafGen = function(leafWidth, leafHeight, options, raph){
 	//	 branchAngleVariation: 0.1
 	// }
 
-	this.trimAndRender = function trimAndRender(branch, depthRemaining, cb){
+	this.trimAndRender = function trimAndRender(branch, depthRemain, cb){
+		console.log("Trimming branch..")
 		var totalLength = branch.getTotalLength();
-		var newBranch = branch.getSubpath((1-options.branchFrequency)*totalLength*options.branchFrequencyVariation, totalLength)
-		this.render(newBranch, depthRemaining, cb)
+		var stepIn = totalLength * (options.branchFrequency) //* ((Math.random()+0.5) * options.tipVariation)
+		var newBranch = branch.getSubpath(stepIn, totalLength)
+
+		this.render(raph.path(newBranch), branch, depthRemain, cb)
 	}
 
-	this.render = function render(branch, depthRemaining, cb){
+	this.render = function render(branch, bigBranch, depthRemaining, cb){
 		var stemRemaining = branch.getTotalLength();
-		if(depthRemaining > 0 && stemRemaining > this.minLengthInPixels(stemRemaining)){
-			trimAndRender(branch);
+
+		if(depthRemaining > 0){
+			console.log("Rendering...")
 			//Split down the branch:
 			//var remainder = branch.getSubpath(stemRemaining, branch)
 			var commonBase = branch.getPointAtLength(0)
 			var pointDerivativeAngle = commonBase.alpha
 
 			for(var branchDir = -1; branchDir<2; branchDir+=2){
-				var branchBase = "M "+commonBase.x+" "+commonBase.y+" ";
+				var branchBase = "M "+commonBase.x+" "+commonBase.y+" c ";
 				var tip = {
-					x:(Math.random()-0.5)*tipVariation,
-					y: commonBase.y+remainder.getTotalLength() + (Math.random()-0.5)*tipVariation
+					x:(Math.random()-0.5)*options.tipVariation,
+					y: 0 + (stemRemaining * this.options.branchLength)+(Math.random()-0.5)*options.tipVariation//* (Math.random()-0.5)*options.tipVariation)
 				}
-				var initialAngle = angleBetween()
-				var branchInitialD = ''+options.initialVelocity*Math.cos(options.initialAngle * branchDir)+' '+options.initialVelocity*Math.sin(options.initialAngle * branchDir)
-				var branchArrivalD = ''+options.finalVelocity*Math.cos(options.finalAngle * branchDir)+' '+options.finalVelocity*Math.sin(options.finalAngle * branchDir)
-				var branchTip = " "+tip.x+" "+tip.y
+				
+				//No velocity for testing:
+				// var branchInitialD = ''+commonBase.x+" "+commonBase.y+" "
+				 var branchArrivalD = ''+tip.x+' '+tip.y+' '
+				
+				// //Velocities in progress:
+				var branchInitialD = ''+options.initialVelocity*stemRemaining*Math.cos(options.initialAngle * branchDir)+' '+options.initialVelocity*Math.sin(options.initialAngle * branchDir)+' '
+				//var branchArrivalD = ''+options.finalVelocity*stemRemaining*Math.cos(options.finalAngle * branchDir)+' '+options.finalVelocity*Math.sin(options.finalAngle * branchDir)
+				
+				var branchTip = " "+tip.x+" "+tip.y+" "
 
-				var branch = branchBase + branchInitialD + branchArrivalD + branchTip;
+				//curvyBranchString
+				var branchString = branchBase + branchInitialD + branchArrivalD + branchTip;
 
-				branch.rotate(pointDerivativeAngle + options.branchAngle * (Math.random()-0.5) * branchVariation * branchDir) )
-				cb(branch)
-				trimAndRender(branch, depthRemaining - 1)
+				console.log(branchString)
+
+				var newBranch = this.raph.path(branchString);
+
+				//newBranch.rotate(45, commonBase.x,  commonBase.y)
+				var amountToRotate = pointDerivativeAngle + (options.branchAngle * branchDir)
+				//console.log("Attempting to rotate "+options.branchAngle + this.branchVariation + branchDir)
+				//newBranch.rotate(amountToRotate, commonBase.x,  commonBase.y)
+				//bigBranch.push(newBranch)
+				this.trimAndRender(newBranch, depthRemaining - 1);
+				cb(newBranch)
 			}
 		}
 	}

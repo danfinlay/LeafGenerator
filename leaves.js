@@ -1,30 +1,29 @@
-function readyFunction(){
 
-var p = Raphael(10, 50, 800, 600);
+var p = Raphael(0, 0, 800, 600);
 // Creates circle at x = 50, y = 40, with radius 10
-
+//console.log("Raphael created.")
 var tree = [];
-// var branch = p.path("M 200 400 c -50 0 0 -100 -100 -100");
-// var l = branch.getTotalLength()
-// var b = branch.getPointAtLength(l*0.6);
-// var subPath = branch.getSubpath(l*0.2, l*0.8);
-// console.log(subPath)
-// var branch2 = p.path("M "+b.x+" "+b.y+"c 0 -70 -120 0 -100 -100")
+var branch = p.path("M 200 400 c -50 0 0 -100 -100 -100");
+var l = branch.getTotalLength()
+var b = branch.getPointAtLength(l*0.6);
+var subPath = branch.getSubpath(l*0.2, l*0.8);
+console.log(subPath)
+var branch2 = p.path("M "+b.x+" "+b.y+"c 0 -70 -120 0 -100 -100")
 
 
   var options = {
-    branchFrequency:0.75,
+    branchFrequency:0.5,
     branchFrequencyVariation: 0.1,
-    minLength:10, //Minimum number of pixels for a vein to be long.
-    branchLength:0.6,
-    levelsDeep:5,
-    branchAngle:30,
+    minLength:5, //Minimum number of pixels for a vein to be long.
+    branchLength:0.9,
+    levelsDeep:4,
+    branchAngle:45,
     initialAngle:90,
-    initialVelocity:20,
+    initialVelocity:0.1,
     finalAngle:-45,
-    finalVelocity: 20,
-    tipVariation: 0.3,
-    branchAngleVariation: 0.1
+    finalVelocity: 0.1,
+    tipVariation: 0.5,
+    branchAngleVariation: 0.5
   }
 
 var generator = new LeafGen(p.width, p.height, options, p);
@@ -98,4 +97,3 @@ generator.activate(function(newBranch){
 //   // draw a line//   line(100, 100, 200, 200);
 // }
 
-}
